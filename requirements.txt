@@ -1,0 +1,3 @@
+Flask>=1.0,<=1.1.2
+musicbrainzngs==0.7.1
+gunicorn; platform_system == "Linux"
