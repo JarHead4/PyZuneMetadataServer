@@ -1,3 +1,20 @@
+def to_mb_toc(toc: str) -> str:
+    parts = toc.split('+')
+    count: int = len(parts)
+    
+    for i in range(count):
+        part: str = parts[i]
+
+        # Convert from hex to decimal
+        parts[i] = str(int(part, 16))
+
+    # Move section offset to position two
+    parts.insert(1, parts.pop(count - 1))
+
+    # Add first track
+    parts.insert(0, "1")
+
+    return '+'.join(parts)
 
 def get_country(geoid):
     match geoid:
