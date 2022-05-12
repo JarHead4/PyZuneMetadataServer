@@ -50,10 +50,8 @@ def cd_get_album():
     print("Converted ToC to MusicBrainz ToC: " + MBToC)
     # Get album info from MusicBrainz
     album = musicbrainzngs.get_releases_by_discid(MBToC, toc=MBToC, includes=["artists", "recordings"])
-    print(album)
 
     releasenum = utils.get_release_by_country(country, album)
-    print(releasenum)
     album_name: str = album["release-list"][releasenum]["title"]
     album_name = album_name.replace("&", "&amp;")
     artist: str = album['release-list'][releasenum]['artist-credit'][0]['artist']['name']
@@ -94,7 +92,6 @@ def cd_get_album():
         xml = xml + "<track><WMContentID>" + trackid + "</WMContentID><ZuneMediaID>" + trackid + "</ZuneMediaID><trackTitle>" + tracktitle + "</trackTitle><uniqueFileID>UMGp_id=P     2400;UMGt_id=T  2881042</uniqueFileID><trackNumber>" + tracknum + "</trackNumber><trackPerformer>" + artist + "</trackPerformer><trackComposer>" + artist + "</trackComposer><explicitLyrics>0</explicitLyrics></track>"
     # Finalize XML
     xml = xml + "</MDR-CD><Backoff><Time>5</Time></Backoff></METADATA>"
-    print(xml)
     print("Converted " + album_name + " to XML")
     return Response(xml, mimetype=MIME_XML)
     print("Sent XML to client")
