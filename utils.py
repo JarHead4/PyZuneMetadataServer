@@ -18,8 +18,6 @@ def to_mb_toc(toc: str) -> str:
 
 def get_country(geoid):
     match geoid:
-        case "f4":
-            return "US"
         case "292d":
             return "XE"
         case "7c":
@@ -48,6 +46,8 @@ def get_country(geoid):
             return "SG"
         case "xc":
             return "AU"
+        case _:
+            return "US"
             
 def get_release_by_country(country, album):
     releases = int(album['release-count'])-int("1")
@@ -60,3 +60,13 @@ def get_release_by_country(country, album):
                 return 0
     except:
         return 0
+
+table = str.maketrans({
+    "<": "&lt;",
+    ">": "&gt;",
+    "&": "&amp;",
+    "'": "&apos;",
+    '"': "&quot;",
+})
+def escape(txt):
+    return txt.translate(table)

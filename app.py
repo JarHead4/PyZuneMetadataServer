@@ -26,6 +26,7 @@ def cd_get_album():
     
     # Get country abbreviation from geoid
     country = utils.get_country(geoid)
+    print("Client region is " + country)
     
     # Replace spaces with +, so the MusicBrainz ToC script works
     ToC = ToC.replace(" ", "+")
@@ -38,12 +39,14 @@ def cd_get_album():
     # Get album info from MusicBrainz
     album = musicbrainzngs.get_releases_by_discid(MBToC, toc=MBToC, includes=["artists", "recordings"])
 
+    print("Matching CD region to client region (" + country + ")")
     releasenum = utils.get_release_by_country(country, album)
+    print("Found best match, using release " + str(releasenum))
     
-    album_name: str = album["release-list"][releasenum]["title"]
-    album_name = album_name.replace("&", "&amp;")
-    artist: str = album['release-list'][releasenum]['artist-credit'][0]['artist']['name']
-    artist = artist.replace("&", "&amp;")
+    album_name = album["release-list"][releasenum]["title"]
+    artist = album['release-list'][releasenum]['artist-credit'][0]['artist']['name']
+    album_name = utils.escape(album_name)
+    artist = utils.escape(artist)
     
     # Check if MusicBrainz has a release date, if not set release_date to Unknown
     try:
@@ -82,7 +85,7 @@ def cd_get_album():
             tracktitle: str = album['release-list'][releasenum]['medium-list'][0]['track-list'][x]['title']
         except:
             tracktitle: str = album['release-list'][releasenum]['medium-list'][0]['track-list'][x]['recording']['title']
-        tracktitle = tracktitle.replace("&", "&amp;")
+        tracktitle = utils.escape(tracktitle)
         xml = xml + "<track><WMContentID>" + trackid + "</WMContentID><ZuneMediaID>" + trackid + "</ZuneMediaID><trackTitle>" + tracktitle + "</trackTitle><uniqueFileID>UMGp_id=P     2400;UMGt_id=T  2881042</uniqueFileID><trackNumber>" + tracknum + "</trackNumber><trackPerformer>" + artist + "</trackPerformer><trackComposer>" + artist + "</trackComposer><explicitLyrics>0</explicitLyrics></track>"
     
     # Finalize XML
@@ -93,17 +96,19 @@ def cd_get_album():
 
 @app.route(f"/cdinfo/GetMDRCDPOSTURL.aspx")
 def get_post_url():
-    with open(f'GetMDRCDPOSTURL.aspx', 'r') as file:
-        data: str = file.read().replace('\n', '')
-        return Response(data, mimetype=MIME_ATOM_XML)
+    return 'Unimplemented Feature', 500
 
 # Get large image information
 @app.route(f"/cover/large/album.jpg")
 def cd_get_large():
     # Get id header from Zune request
     AlbumId = request.args.get('id')
-
-    image = musicbrainzngs.get_image_front(AlbumId, size=1200)
+    try:
+        print("Getting Album Art for " + AlbumId)
+        image = musicbrainzngs.get_image_front(AlbumId, size=1200)
+    except:
+        print("The Album Art was not found on MusicBrainz")
+        return 'Not Found', 404
 
     return Response(image, mimetype=MIME_JPG)
 
@@ -113,7 +118,10 @@ def cd_get_small():
     # Get id header from Zune request
     AlbumId = request.args.get('id')
 
-    image = musicbrainzngs.get_image_front(AlbumId, size=500)
+    try:
+        image = musicbrainzngs.get_image_front(AlbumId, size=500)
+    except:
+        return 'Not Found', 404
 
     return Response(image, mimetype=MIME_JPG)
 
