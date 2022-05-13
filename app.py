@@ -36,17 +36,22 @@ def cd_get_album():
     MBToC = utils.to_mb_toc(ToC)
     print("Converted ToC to MusicBrainz ToC: " + MBToC)
     
-    # Get album info from MusicBrainz
-    album = musicbrainzngs.get_releases_by_discid(MBToC, toc=MBToC, includes=["artists", "recordings"])
+    try:
+        # Get album info from MusicBrainz
+        album = musicbrainzngs.get_releases_by_discid(MBToC, toc=MBToC, includes=["artists", "recordings"])
 
-    print("Matching CD region to client region (" + country + ")")
-    releasenum = utils.get_release_by_country(country, album)
-    print("Found best match, using release " + str(releasenum))
+        print("Matching CD region to client region (" + country + ")")
+        releasenum = utils.get_release_by_country(country, album)
+        print("Found best match, using release " + str(releasenum))
     
-    album_name = album["release-list"][releasenum]["title"]
-    artist = album['release-list'][releasenum]['artist-credit'][0]['artist']['name']
-    album_name = utils.escape(album_name)
-    artist = utils.escape(artist)
+        MBID = album["release-list"][releasenum]["id"]
+    
+        album_name = album["release-list"][releasenum]["title"]
+        artist = album['release-list'][releasenum]['artist-credit'][0]['artist']['name']
+        album_name = utils.escape(album_name)
+        artist = utils.escape(artist)
+    except:
+        print("An error occurred while getting MusicBrainz data (CD doesn't exist?)")
     
     # Check if MusicBrainz has a release date, if not set release_date to Unknown
     try:
@@ -59,9 +64,10 @@ def cd_get_album():
         release_date: str = "Unknown"
     
     numoftracks: str = album['release-list'][releasenum]['medium-list'][0]['track-count']
-    MBID: str = album["release-list"][releasenum]["id"]
-
+    
     print("Identified CD as: " + album_name + " by " + artist)
+    
+    genre = utils.get_genre_by_id(MBID)
     
     # Start building XML with new data
     xml = "<METADATA><MDR-CD><version>5.0</version><WMCollectionID>" + MBID + "</WMCollectionID><WMCollectionGroupID>" + MBID + "</WMCollectionGroupID><ZuneAlbumMediaID>" + MBID + "</ZuneAlbumMediaID><uniqueFileID>UMGa_id=R   123480</uniqueFileID><albumTitle>" + album_name + "</albumTitle><albumArtist>" + artist + "</albumArtist>" 
@@ -70,7 +76,13 @@ def cd_get_album():
     if release_date != "Unknown":
         xml = xml + "<releaseDate>" + release_date + "</releaseDate>"
 
-    xml = xml + "<label>UMG</label><genre>Pop</genre><providerStyle>Pop/Rock</providerStyle><publisherRating>5</publisherRating><buyParams>providerName=UMG&amp;albumID=" + MBID + "&amp;a_id=R%20%20%20123480&amp;album=Go%20West%20Young%20Man&amp;artistID=D82033BF-D711-4442-94D6-1196E76223F4&amp;p_id=P%20%20%20%20%202400&amp;artist=Michael%20W.%20Smith</buyParams><largeCoverParams>/large/album.jpg?id=" + MBID + "</largeCoverParams><smallCoverParams>/small/album.jpg?id=" + MBID + "</smallCoverParams><moreInfoParams>" + MBID + "</moreInfoParams><dataProvider>AMG</dataProvider><dataProviderParams>Provider=AMG</dataProviderParams><dataProviderLogo>Provider=AMG</dataProviderLogo><needIDs>0</needIDs>"
+    xml = xml + "<label>UMG</label>"
+    
+    # Remove the genre if it's unavailable
+    if genre != "Unknown":
+        xml = xml + "<genre>" + genre + "</genre>"
+        
+    xml = xml + "<providerStyle>Pop/Rock</providerStyle><publisherRating>5</publisherRating><buyParams>providerName=UMG&amp;albumID=" + MBID + "&amp;a_id=R%20%20%20123480&amp;album=Go%20West%20Young%20Man&amp;artistID=D82033BF-D711-4442-94D6-1196E76223F4&amp;p_id=P%20%20%20%20%202400&amp;artist=Michael%20W.%20Smith</buyParams><largeCoverParams>/large/album.jpg?id=" + MBID + "</largeCoverParams><smallCoverParams>/small/album.jpg?id=" + MBID + "</smallCoverParams><moreInfoParams>" + MBID + "</moreInfoParams><dataProvider>AMG</dataProvider><dataProviderParams>Provider=AMG</dataProviderParams><dataProviderLogo>Provider=AMG</dataProviderLogo><needIDs>0</needIDs>"
     
     # Add track info to XML for each track
     for i in range(numoftracks):

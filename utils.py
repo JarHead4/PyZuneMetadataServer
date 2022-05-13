@@ -1,3 +1,7 @@
+import genres
+import musicbrainzngs
+from musicbrainzngs.musicbrainz import ResponseError
+
 def to_mb_toc(toc: str) -> str:
     parts = toc.split('+')
     count: int = len(parts)
@@ -70,3 +74,21 @@ table = str.maketrans({
 })
 def escape(txt):
     return txt.translate(table)
+    
+def get_genre_by_id(id):
+    try:
+        tags = musicbrainzngs.get_release_by_id(id, includes=["tags"])
+        priority = max(tags['release']['tag-list'], key=lambda ev: ev['count'])
+        genre = priority['name']
+        zuneID = genres.get_zune_genre_id(genre)
+        zuneName = genres.get_zune_genre_name(zuneID)
+        if (zuneName == genre):
+            genre = genre.title()
+            print("Set CD genre to " + genre)
+            return genre
+        else:
+            print("Could not find a genre for CD, continuing with no genre")
+            return "Unknown"
+    except:
+        print("Could not find a genre for CD, continuing with no genre")
+        return "Unknown"
