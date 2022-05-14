@@ -115,6 +115,8 @@ def get_post_url():
 def cd_get_large():
     # Get id header from Zune request
     AlbumId = request.args.get('id')
+    removeIndicator = "?locale"
+    AlbumId = AlbumId.split(removeIndicator, 1)[0]
     try:
         print("Getting Album Art for " + AlbumId)
         image = musicbrainzngs.get_image_front(AlbumId, size=1200)
@@ -129,13 +131,24 @@ def cd_get_large():
 def cd_get_small():
     # Get id header from Zune request
     AlbumId = request.args.get('id')
-
+    removeIndicator = "?locale"
+    AlbumId = AlbumId.split(removeIndicator, 1)[0]
     try:
+        print("Getting Album Art for " + AlbumId)
         image = musicbrainzngs.get_image_front(AlbumId, size=500)
     except:
+        print("The Album Art was not found on MusicBrainz")
         return 'Not Found', 404
 
     return Response(image, mimetype=MIME_JPG)
+        
+# Windows Media Player 9 redirect
+@app.route(f"/redir/GetMDRCD.asp")
+def wmp9_redir():
+    cd = request.args.get('CD')
+    locale = request.args.get('locale')
+    return redirect("http://toc.music.metaservices.microsoft.com/cdinfo/GetMDRCD.aspx?CD=" + cd + "&geoid=" + locale, code=302)
+        
 
 if __name__ == "__main__":
     app.run(port=80, host="127.0.0.3")
