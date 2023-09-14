@@ -64,6 +64,21 @@ def get_release_by_country(country, album):
                 return 0
     except:
         return 0
+        
+def get_release_by_offset(toc, album, release):
+    discs = len(album['release-list'][release]['medium-list'])
+    offsets = toc.split("+")
+    sectors = int(offsets[2])
+    
+    try:
+        for i in range(discs):
+            x = int("%d" % (i))
+            if int(album['release-list'][release]['medium-list'][x]['disc-list'][0]['sectors']) == sectors:
+                return x
+            elif x == discs:
+                return 0
+    except:
+        return 0
 
 table = str.maketrans({
     "<": "&lt;",
