@@ -199,7 +199,7 @@ def cd_get_small():
 @app.route(f"/redir/QueryTOC.asp")
 def wmp7_redir():
     cd = request.args.get('cd')
-    return redirect("http://192.168.0.102/cdinfo/QueryTOC.asp?CD=" + cd + "&geoid=0", code=302)
+    return redirect("http://windowsmedia.com/cdinfo/QueryTOC.asp?CD=" + cd + "&geoid=0", code=302)
         
 # Windows Media Player 9 redirect
 @app.route(f"/redir/GetMDRCD.asp")
@@ -216,4 +216,4 @@ def wmp9_redir_posturl():
     return redirect("http://info.music.metaservices.microsoft.com/cdinfo/GetMDRCDPOSTURL.aspx", code=302)
         
 if __name__ == "__main__":
-    app.run(port=80, host="192.168.0.102")
+    app.run(port=80, host="127.0.0.1")
