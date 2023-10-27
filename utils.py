@@ -60,9 +60,11 @@ def get_release_by_country(country, album):
             x = int("%d" % (i))
             if album["release-list"][x]["country"] == country:
                 return x
-            elif x == releases:
+            elif x + 1 >= releases:
+                print("Failed to find a matching release, using the default")
                 return 0
-    except:
+    except Exception as e:
+        print("Error from get_release_by_country:", e)
         return 0
         
 def get_release_by_offset(toc, album, release):
@@ -75,9 +77,11 @@ def get_release_by_offset(toc, album, release):
             x = int("%d" % (i))
             if int(album['release-list'][release]['medium-list'][x]['disc-list'][0]['sectors']) == sectors:
                 return x
-            elif x == discs:
+            elif x + 1 == discs:
+                print("Failed to find a matching disc, using the default")
                 return 0
-    except:
+    except Exception as e:
+        print("Error from get_release_by_offset:", e)
         return 0
 
 table = str.maketrans({
