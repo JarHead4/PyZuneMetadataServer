@@ -20,7 +20,7 @@ def to_mb_toc(toc: str) -> str:
 
     return '+'.join(parts)
 
-def get_country(geoid):
+def get_country_by_geoid(geoid):
     match geoid:
         case "292d":
             return "XE"
@@ -50,6 +50,23 @@ def get_country(geoid):
             return "SG"
         case "xc":
             return "AU"
+        case _:
+            return "US"
+            
+def get_country_by_locale(locale):
+    match locale:
+        case "411":
+            return "JP"
+        case "1009":
+            return "CA"
+        case "809":
+            return "GB"
+        case "413":
+            return "NL"
+        case "407":
+            return "DE"
+        case "1004":
+            return "SG"
         case _:
             return "US"
             

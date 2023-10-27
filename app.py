@@ -5,9 +5,6 @@ import utils
 
 from atom.factory import *
 
-from locale import getdefaultlocale
-sys_locale = getdefaultlocale()[0]
-
 app = Flask(__name__)
 musicbrainzngs.set_useragent("Zune", "4.8")
 
@@ -85,13 +82,6 @@ def default():
     with open(f'default.html', 'r') as file:
         data: str = file.read().replace('\n', '')
         return Response(data)
-        
-@app.route("/redir/getmdrcdzune/")
-def zune_redir():
-    path = request.full_path
-    removeIndicator = "/redir/getmdrcdzune/"
-    query = path.split(removeIndicator, 1)[1]
-    return redirect("http://toc.music.metaservices.microsoft.com/cdinfo/GetMDRCD.aspx?" + query, code=302)
 
 @app.route(f"/cdinfo/GetMDRCD.aspx")
 @app.route(f"/cdinfo/QueryTOC.asp")
@@ -101,10 +91,20 @@ def cd_get_album():
     
     # Get geoId header from Zune request
     geoid = request.args.get('geoid')
+    locale = request.args.get('locale')
     
-    # Get country abbreviation from geoid
-    country = utils.get_country(geoid)
-    print("Client region is " + country)
+    # Prioritize geoid over locale, as more countries are supported there
+    if geoid is not None:
+        country = utils.get_country_by_geoid(geoid)
+        print("Matched client geoid to region " + country)
+    # Use locale as a fallback (likely a WMP 7-9 client)
+    elif locale is not None:
+        country = utils.get_country_by_locale(locale)
+        print("Matched client locale to region " + country)
+    # Client didn't send locale or geoid (should never happen), default to US so things still work
+    else:
+        country = "US"
+        print("Client didn't send geoid or locale, defaulting to US")
     
     # Replace spaces with +, so the MusicBrainz ToC script works
     ToC = ToC.replace(" ", "+")
@@ -172,7 +172,7 @@ def cd_get_large():
     AlbumId = AlbumId.split(removeIndicator, 1)[0]
     try:
         print("Getting Album Art for " + AlbumId)
-        image = musicbrainzngs.get_image_front(AlbumId, size=1200)
+        image = musicbrainzngs.get_image_front(AlbumId, size=250)
     except:
         print("The Album Art was not found on MusicBrainz")
         return 'Not Found', 404
@@ -188,7 +188,7 @@ def cd_get_small():
     AlbumId = AlbumId.split(removeIndicator, 1)[0]
     try:
         print("Getting Album Art for " + AlbumId)
-        image = musicbrainzngs.get_image_front(AlbumId, size=500)
+        image = musicbrainzngs.get_image_front(AlbumId, size=250)
     except:
         print("The Album Art was not found on MusicBrainz")
         return 'Not Found', 404
@@ -199,14 +199,18 @@ def cd_get_small():
 @app.route(f"/redir/QueryTOC.asp")
 def wmp7_redir():
     cd = request.args.get('cd')
-    return redirect("http://windowsmedia.com/cdinfo/QueryTOC.asp?CD=" + cd + "&geoid=0", code=302)
+    locale = request.args.get('locale')
+    if locale is None:
+        locale = "0"
+
+    return redirect("http://windowsmedia.com/cdinfo/QueryTOC.asp?CD=" + cd + "&locale=" + locale, code=302)
         
 # Windows Media Player 9 redirect
 @app.route(f"/redir/GetMDRCD.asp")
 def wmp9_redir():
     cd = request.args.get('CD')
     locale = request.args.get('locale')
-    return redirect("http://toc.music.metaservices.microsoft.com/cdinfo/GetMDRCD.aspx?CD=" + cd + "&geoid=" + locale, code=302)
+    return redirect("http://toc.music.metaservices.microsoft.com/cdinfo/GetMDRCD.aspx?CD=" + cd + "&locale=" + locale, code=302)
     
 # Windows Media Player 9 POST URL redirect
 @app.route(f"/redir/GetMDRCDPOSTURLBackground.asp")
@@ -214,6 +218,22 @@ def wmp9_redir_posturl():
     cd = request.args.get('CD')
     locale = request.args.get('locale')
     return redirect("http://info.music.metaservices.microsoft.com/cdinfo/GetMDRCDPOSTURL.aspx", code=302)
+    
+# MDR-CD redirect
+@app.route(f"/redir/getmdrcd/")
+def mdrcd_redir():
+    path = request.full_path
+    removeIndicator = "/redir/getmdrcd/"
+    query = path.split(removeIndicator, 1)[1]
+    return redirect("http://toc.music.metaservices.microsoft.com/cdinfo/GetMDRCD.aspx?" + query, code=302)
+
+# Zune redirect
+@app.route("/redir/getmdrcdzune/")
+def zune_redir():
+    path = request.full_path
+    removeIndicator = "/redir/getmdrcdzune/"
+    query = path.split(removeIndicator, 1)[1]
+    return redirect("http://toc.music.metaservices.microsoft.com/cdinfo/GetMDRCD.aspx?" + query, code=302)
         
 if __name__ == "__main__":
     app.run(port=80, host="127.0.0.1")
