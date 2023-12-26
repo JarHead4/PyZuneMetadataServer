@@ -71,8 +71,10 @@ def get_country_by_locale(locale):
             return "US"
             
 def get_release_by_country(country, album):
-    releases = int(album['release-count'])-int("1")
     try:
+        releases = int(album['release-count'])
+        if (releases > 1):
+            releases = releases-int("1")
         for i in range(releases):
             x = int("%d" % (i))
             if album["release-list"][x]["country"] == country:
@@ -85,11 +87,10 @@ def get_release_by_country(country, album):
         return 0
         
 def get_release_by_offset(toc, album, release):
-    discs = len(album['release-list'][release]['medium-list'])
-    offsets = toc.split("+")
-    sectors = int(offsets[2])
-    
     try:
+        discs = len(album['release-list'][release]['medium-list'])
+        offsets = toc.split("+")
+        sectors = int(offsets[2])
         for i in range(discs):
             x = int("%d" % (i))
             if int(album['release-list'][release]['medium-list'][x]['disc-list'][0]['sectors']) == sectors:
