@@ -4,6 +4,8 @@ from musicbrainzngs.musicbrainz import ResponseError
 
 def to_mb_toc(toc: str) -> str:
     parts = toc.split('+')
+    if "-" in toc:  #Testing WM ID's
+        parts = toc.split('-')
     count: int = len(parts)
     
     for i in range(count):
@@ -111,21 +113,65 @@ table = str.maketrans({
 })
 def escape(txt):
     return txt.translate(table)
-    
-def get_genre_by_id(id):
+   
+def maxes(a, key=None):
+    if key is None:
+        key = lambda x: x
+
+    a = iter(a)
     try:
-        tags = musicbrainzngs.get_release_by_id(id, includes=["tags"])
-        priority = max(tags['release']['tag-list'], key=lambda ev: ev['count'])
-        genre = priority['name']
-        zuneID = genres.get_zune_genre_id(genre)
-        zuneName = genres.get_zune_genre_name(zuneID)
-        if (zuneName == genre):
-            genre = genre.title()
-            print("Set CD genre to " + genre)
+        a0 = next(a)
+        m, max_list = key(a0), [a0]
+    except StopIteration:
+        raise ValueError("maxes() arg is an empty sequence")
+
+    for s in a:
+        k = key(s)
+        if k > m:
+            m, max_list = k, [s]
+        elif k == m:
+            max_list.append(s)
+    return m, max_list
+
+def dateProc(release_date,original_date): ## WMP needs YYYY-MM-DD
+    if len(release_date) == 4: #Some release dates are just years
+        return release_date + "-01-01"    
+    elif len(release_date) == 7 and release_date[4]=='-':#Some release dates are just years and months, but since bothe YYYY-MM and Unknown are len of 7, an extra check needs to happen
+        return release_date + "-01"
+    elif original_date != "Unknown" and len(release_date) != 4 and len(release_date) != 10: #When no date is associated with release, the date from release-group is grabbed
+        return dateProc(original_date,"Unknown")#
+    return release_date
+
+def genreRetrieve(all_genres,key):
+    if len(all_genres)==0:
+        return "Unknown"
+    maxs = maxes(all_genres, key)
+    genre = genres.topGenre(maxs)
+    zuneID = genres.get_zune_genre_id(genre)
+    if genre == "Unknown":
+        del all_genres[maxs[1][0]]
+        return genreRetrieve(all_genres,key)
+    print("Set CD genre to " + genre)
+    return genre.title()#replace(" music","")
+ 
+def get_genre_by_id(id): #Find genre in release, then release-group and then finally artist, if none have it, the genre is attempted to be grabbed from the tracks right before the XML is built
+    tags = musicbrainzngs.get_release_by_id(id, includes=["tags","release-groups","artists"])
+    try:
+        genre = genreRetrieve(tags['release']['tag-list'],key=lambda ev: ev['count'])
+        if genre != "Unknown":
             return genre
-        else:
-            print("Could not find a genre for CD, continuing with no genre")
-            return "Unknown"
+    except:
+        print("No Valid Genres found with release")
+    try:
+        genre = genreRetrieve(tags['release']['release-group']['tag-list'],key=lambda ev: ev['count'])
+        if genre != "Unknown":
+            return genre
+    except:
+        print("No Valid Genres found with release-group")
+    try:
+        genre =  genreRetrieve(tags['release']["artist-credit"][0]["artist"]['tag-list'],key=lambda ev: ev['count']) #Grabs 1st artist genre
+        if genre != "Unknown":
+            return genre
     except:
         print("Could not find a genre for CD, continuing with no genre")
         return "Unknown"
