@@ -16,3 +16,10 @@ To connect to the public version, add the following entries to HOSTS:
 135.181.88.32        redir.metaservices.microsoft.com
 135.181.88.32        windowsmedia.com
 ```
+### Delete old/inaccurate metadata in Windows Media Player
+Simply delete all files in the corresponding folder:
+<dl><ul>
+<li>Windows 9X: C:\WINDOWS\Application Data\Microsoft\Media Player</li>
+<li>Windows 2000 and XP: C:\Documents and Settings\&lt;User&gt;\Local Settings\Application Data\Microsoft\Media Player</li>
+<li>Windows Vista and newer: C:\Users\&lt;User&gt;\AppData\Local\Microsoft\Media Player</li>
+<ul></dl>
