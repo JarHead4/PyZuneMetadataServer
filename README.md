@@ -10,11 +10,11 @@ Windows Media Player 7+ and all versions of the Zune software are confirmed to w
 To connect to the public version, add the following entries to HOSTS:
 
 ```
-135.181.88.32        toc.music.metaservices.microsoft.com
-135.181.88.32        info.music.metaservices.microsoft.com
-135.181.88.32        images.metaservices.microsoft.com
-135.181.88.32        redir.metaservices.microsoft.com
-135.181.88.32        windowsmedia.com
+69.48.179.166        toc.music.metaservices.microsoft.com
+69.48.179.166        info.music.metaservices.microsoft.com
+69.48.179.166        images.metaservices.microsoft.com
+69.48.179.166        redir.metaservices.microsoft.com
+69.48.179.166        windowsmedia.com
 ```
 ### Delete old/inaccurate metadata in Windows Media Player
 Simply delete all files in the corresponding folder:
